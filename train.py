@@ -15,14 +15,14 @@ from torch.utils.tensorboard import SummaryWriter
 writer = SummaryWriter("runs/viz_emo_experiment")
 
 
-# ==== Config ====
+# ==== Config ==== This should be in our config file
 BATCH_SIZE = 32
 NUM_EPOCHS = 5
 LEARNING_RATE = 1e-4
 NUM_CLASSES = 8  
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu")
 
-# ==== Transforms ====
+# ==== Transforms ==== Need to be modular with all possible transformation and augementation
 train_transform = transforms.Compose([
     transforms.Resize((224, 224)),
     transforms.RandomHorizontalFlip(),
@@ -41,12 +41,12 @@ val_dataset   = CustomImageDataset("data/AffectnetYolo/valid", transform=test_tr
 train_loader = DataLoader(train_dataset, batch_size=BATCH_SIZE, shuffle=True)
 val_loader   = DataLoader(val_dataset, batch_size=BATCH_SIZE, shuffle=False)
 
-# ==== Model ====
+# ==== Model ==== This is the part we need make magic happen
 model = models.efficientnet_b0(pretrained=True)
 model.classifier[1] = nn.Linear(model.classifier[1].in_features, NUM_CLASSES)
 model = model.to(DEVICE)
 
-# ==== Optimizer & Loss ====
+# ==== Optimizer & Loss ==== Maybe having different optimizer and loss to test?
 criterion = nn.CrossEntropyLoss()
 optimizer = torch.optim.Adam(model.parameters(), lr=LEARNING_RATE)
 
@@ -97,6 +97,8 @@ for epoch in range(NUM_EPOCHS):
     writer.add_scalar("Accuracy/train", acc, epoch)
     writer.add_scalar("Loss/val", val_loss / len(val_loader), epoch)
     writer.add_scalar("Accuracy/val", val_acc, epoch)
+
+    # === our own custom visuals to include below? maybe!
 
 # ==== Save Model ====
 torch.save(model.state_dict(), "vizemo.pth")

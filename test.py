@@ -10,7 +10,7 @@ from utils.custom_dataset import CustomImageDataset
 from torchvision import models
 import torch.nn as nn
 
-# ==== Config ====
+# ==== Config ==== This should be in our config file
 TEST_DIR = "data/AffectnetYolo/test"
 MODEL_PATH = "vizemo.pth"
 NUM_CLASSES = 8 
@@ -27,7 +27,7 @@ test_transform = transforms.Compose([
 test_dataset = CustomImageDataset(TEST_DIR, transform=test_transform)
 test_loader = DataLoader(test_dataset, batch_size=BATCH_SIZE, shuffle=False)
 
-# ==== Load Model ====
+# ==== Load Model ==== Will have to modify 
 model = models.efficientnet_b0(pretrained=False)
 model.classifier[1] = nn.Linear(model.classifier[1].in_features, NUM_CLASSES)
 model.load_state_dict(torch.load(MODEL_PATH, map_location=DEVICE))
