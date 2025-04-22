@@ -15,7 +15,7 @@ TEST_DIR = "data/AffectnetYolo/test"
 MODEL_PATH = "vizemo.pth"
 NUM_CLASSES = 8 
 BATCH_SIZE = 32
-DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+DEVICE = torch.device("cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu")
 
 # ==== Transforms ====
 test_transform = transforms.Compose([
