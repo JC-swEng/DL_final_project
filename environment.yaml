@@ -1,0 +1,20 @@
+name: dlfinal
+channels:
+  - defaults
+dependencies:
+  - python==3.12
+  - numpy
+  - pyyaml
+  - matplotlib
+  - jupyter
+  - tqdm
+  - pip
+  - pip:
+    - torch
+    - torchvision
+    - notebook
+    - numpy
+
+
+  
+
