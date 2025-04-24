@@ -9,6 +9,7 @@ from torch.utils.data import DataLoader
 from torchvision import transforms, models
 from sklearn.metrics import accuracy_score
 from utils.custom_dataset import CustomImageDataset  # import the custom dataset class
+import yaml
 
 # === add for tensorboard ====
 from torch.utils.tensorboard import SummaryWriter
@@ -16,10 +17,17 @@ writer = SummaryWriter("runs/viz_emo_experiment")
 
 
 # ==== Config ==== This should be in our config file
-BATCH_SIZE = 32
-NUM_EPOCHS = 5
-LEARNING_RATE = 1e-4
-NUM_CLASSES = 8  
+
+# Load config.yaml
+
+with open('config/config.yaml', 'r') as file:
+    config = yaml.safe_load(file)
+
+# config value
+BATCH_SIZE = config["BATCH_SIZE"]
+NUM_EPOCHS = config["NUM_EPOCHS"]
+LEARNING_RATE = config["LEARNING_RATE"]
+NUM_CLASSES = config["NUM_CLASSES"]
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu")
 
 # ==== Transforms ==== Need to be modular with all possible transformation and augementation
@@ -42,7 +50,9 @@ train_loader = DataLoader(train_dataset, batch_size=BATCH_SIZE, shuffle=True)
 val_loader   = DataLoader(val_dataset, batch_size=BATCH_SIZE, shuffle=False)
 
 # ==== Model ==== This is the part we need make magic happen
-model = models.efficientnet_b0(pretrained=True)
+weights = models.EfficientNet_B0_Weights.DEFAULT  
+model = models.efficientnet_b0(weights=weights)
+#model = models.efficientnet_b0(pretrained=True)
 model.classifier[1] = nn.Linear(model.classifier[1].in_features, NUM_CLASSES)
 model = model.to(DEVICE)
 

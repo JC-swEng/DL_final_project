@@ -9,12 +9,17 @@ from sklearn.metrics import accuracy_score, confusion_matrix, classification_rep
 from utils.custom_dataset import CustomImageDataset  
 from torchvision import models
 import torch.nn as nn
+import yaml
 
 # ==== Config ==== This should be in our config file
+# Load config.yaml
+with open("config/config.yaml", "r") as file:
+    config = yaml.safe_load(file)
+
 TEST_DIR = "data/AffectnetYolo/test"
 MODEL_PATH = "vizemo.pth"
-NUM_CLASSES = 8 
-BATCH_SIZE = 32
+NUM_CLASSES = config["NUM_CLASSES"]
+BATCH_SIZE = config["BATCH_SIZE"]
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu")
 
 # ==== Transforms ====
@@ -28,7 +33,8 @@ test_dataset = CustomImageDataset(TEST_DIR, transform=test_transform)
 test_loader = DataLoader(test_dataset, batch_size=BATCH_SIZE, shuffle=False)
 
 # ==== Load Model ==== Will have to modify 
-model = models.efficientnet_b0(pretrained=False)
+weights = models.EfficientNet_B0_Weights.DEFAULT  
+model = models.efficientnet_b0(weights=weights)
 model.classifier[1] = nn.Linear(model.classifier[1].in_features, NUM_CLASSES)
 model.load_state_dict(torch.load(MODEL_PATH, map_location=DEVICE))
 model = model.to(DEVICE)
