@@ -1,13 +1,14 @@
 """
-Include some GPT Vibe coding, to modify
+
 """
 
 import torch
 from torch.utils.data import DataLoader
 from torchvision import transforms
 from sklearn.metrics import accuracy_score, confusion_matrix, classification_report
-from utils.custom_dataset import CustomImageDataset  
+from utils.custom_dataset import AffectnetYoloDataset
 from torchvision import models
+from models.viz_emo import get_model
 import torch.nn as nn
 import yaml
 
@@ -20,22 +21,21 @@ TEST_DIR = "data/AffectnetYolo/test"
 MODEL_PATH = "vizemo.pth"
 NUM_CLASSES = config["NUM_CLASSES"]
 BATCH_SIZE = config["BATCH_SIZE"]
+MODEL_NAME = config["MODEL_NAME"]
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu")
 
 # ==== Transforms ====
 test_transform = transforms.Compose([
-    transforms.Resize((224, 224)),
+    transforms.Resize((224, 224)), # TO have the image input size of EfficientNet
     transforms.ToTensor(),
 ])
 
 # ==== Dataset & Loader ====
-test_dataset = CustomImageDataset(TEST_DIR, transform=test_transform)
+test_dataset = AffectnetYoloDataset(TEST_DIR, transform=test_transform)
 test_loader = DataLoader(test_dataset, batch_size=BATCH_SIZE, shuffle=False)
 
-# ==== Load Model ==== Will have to modify 
-weights = models.EfficientNet_B0_Weights.DEFAULT  
-model = models.efficientnet_b0(weights=weights)
-model.classifier[1] = nn.Linear(model.classifier[1].in_features, NUM_CLASSES)
+# ==== Load Model ==== 
+model = get_model(MODEL_NAME, NUM_CLASSES, DEVICE)
 model.load_state_dict(torch.load(MODEL_PATH, map_location=DEVICE))
 model = model.to(DEVICE)
 model.eval()

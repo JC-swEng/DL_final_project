@@ -5,7 +5,7 @@ import os
 from PIL import Image
 from torch.utils.data import Dataset
 
-class CustomImageDataset(Dataset):
+class AffectnetYoloDataset(Dataset):
     def __init__(self, root_dir, transform=None):
         """
         root_dir: Path to 'train', 'valid', or 'test' folder

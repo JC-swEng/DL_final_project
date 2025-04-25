@@ -1,5 +1,4 @@
 """
-Include some GPT Vibe coding to modify
 """
 
 import os
@@ -8,7 +7,9 @@ import torch.nn as nn
 from torch.utils.data import DataLoader
 from torchvision import transforms, models
 from sklearn.metrics import accuracy_score
-from utils.custom_dataset import CustomImageDataset  # import the custom dataset class
+from utils.custom_dataset import AffectnetYoloDataset  # import the custom dataset class
+from utils.visualize import plot_training_curves
+from models.viz_emo import get_model
 import yaml
 
 # === add for tensorboard ====
@@ -28,12 +29,13 @@ BATCH_SIZE = config["BATCH_SIZE"]
 NUM_EPOCHS = config["NUM_EPOCHS"]
 LEARNING_RATE = config["LEARNING_RATE"]
 NUM_CLASSES = config["NUM_CLASSES"]
+MODEL_NAME = config["MODEL_NAME"]
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu")
 
 # ==== Transforms ==== Need to be modular with all possible transformation and augementation
 train_transform = transforms.Compose([
-    transforms.Resize((224, 224)),
-    transforms.RandomHorizontalFlip(),
+    transforms.Resize((224, 224)), #TO have the image input size of EfficientNet
+    #transforms.RandomHorizontalFlip(),
     transforms.ToTensor(),
 ])
 
@@ -43,22 +45,30 @@ test_transform = transforms.Compose([
 ])
 
 # ==== Dataset & DataLoader ====
-train_dataset = CustomImageDataset("data/AffectnetYolo/train", transform=train_transform)
-val_dataset   = CustomImageDataset("data/AffectnetYolo/valid", transform=test_transform)
+train_dataset = AffectnetYoloDataset("data/AffectnetYolo/train", transform=train_transform)
+val_dataset   = AffectnetYoloDataset("data/AffectnetYolo/valid", transform=test_transform)
 
 train_loader = DataLoader(train_dataset, batch_size=BATCH_SIZE, shuffle=True)
 val_loader   = DataLoader(val_dataset, batch_size=BATCH_SIZE, shuffle=False)
 
-# ==== Model ==== This is the part we need make magic happen
-weights = models.EfficientNet_B0_Weights.DEFAULT  
-model = models.efficientnet_b0(weights=weights)
-#model = models.efficientnet_b0(pretrained=True)
-model.classifier[1] = nn.Linear(model.classifier[1].in_features, NUM_CLASSES)
+# ==== Model ==== we can modified models/viz_emo.py to customized specific model
+
+model = get_model(MODEL_NAME, NUM_CLASSES, DEVICE)
 model = model.to(DEVICE)
 
 # ==== Optimizer & Loss ==== Maybe having different optimizer and loss to test?
 criterion = nn.CrossEntropyLoss()
 optimizer = torch.optim.Adam(model.parameters(), lr=LEARNING_RATE)
+
+# ==== Scheduler (optional strategies) ====
+#scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=5, gamma=0.5)
+# OR for smooth cosine decay:
+#scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=NUM_EPOCHS)
+
+# === for visuals
+
+train_losses, val_losses = [], []
+train_accuracies, val_accuracies = [], []
 
 # ==== Training Loop ====
 for epoch in range(NUM_EPOCHS):
@@ -74,7 +84,9 @@ for epoch in range(NUM_EPOCHS):
         loss = criterion(outputs, labels)
         loss.backward()
         optimizer.step()
-
+        #==== remove if no scheduler
+        #scheduler.step()
+        #====
         train_loss += loss.item()
         all_preds.extend(outputs.argmax(dim=1).cpu().numpy())
         all_labels.extend(labels.cpu().numpy())
@@ -87,7 +99,6 @@ for epoch in range(NUM_EPOCHS):
     val_loss = 0.0
     val_preds, val_labels = [], []
 
-    
 
     with torch.no_grad():
         for images, labels in val_loader:
@@ -108,7 +119,14 @@ for epoch in range(NUM_EPOCHS):
     writer.add_scalar("Loss/val", val_loss / len(val_loader), epoch)
     writer.add_scalar("Accuracy/val", val_acc, epoch)
 
-    # === our own custom visuals to include below? maybe!
+    # === update for visuals
+    train_losses.append(train_loss / len(train_loader))
+    val_losses.append(val_loss / len(val_loader))
+    train_accuracies.append(acc)
+    val_accuracies.append(val_acc)
+
+# === our own custom visuals to include below? maybe!
+plot_training_curves(train_losses, val_losses, train_accuracies, val_accuracies, MODEL_NAME)
 
 # ==== Save Model ====
 torch.save(model.state_dict(), "vizemo.pth")
