@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 from sklearn.metrics import f1_score
+import numpy as np
 
 def plot_training_curves(train_losses, val_losses, train_accuracies, val_accuracies, title_suffix=""):
     epochs = range(1, len(train_losses) + 1)
@@ -25,3 +26,17 @@ def plot_training_curves(train_losses, val_losses, train_accuracies, val_accurac
 
     plt.tight_layout()
     plt.savefig("outputs/plot"+"_"+title_suffix+".png")
+
+def show_bad_predictions(bad_preds, class_names, num_images=12):
+    plt.figure(figsize=(15, 10))
+    for idx in range(min(num_images, len(bad_preds))):
+        img, true_label, pred_label = bad_preds[idx]
+        img = img.permute(1, 2, 0).numpy()  # Convert to HWC
+        img = np.clip(img, 0, 1)
+
+        plt.subplot(3, 4, idx+1)
+        plt.imshow(img)
+        plt.title(f"True: {class_names[true_label]} / Pred: {class_names[pred_label]}")
+        plt.axis('off')
+    plt.tight_layout()
+    plt.savefig("outputs/bad_predictions.png")

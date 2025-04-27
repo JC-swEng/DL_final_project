@@ -8,7 +8,7 @@ from torch.utils.data import DataLoader
 from torchvision import transforms, models
 from sklearn.metrics import accuracy_score
 from utils.custom_dataset import AffectnetYoloDataset  # import the custom dataset class
-from utils.visualize import plot_training_curves
+from utils.visualize import plot_training_curves, show_bad_predictions
 from models.viz_emo import get_model
 import yaml
 
@@ -39,14 +39,33 @@ train_transform = transforms.Compose([
     transforms.ToTensor(),
 ])
 
-test_transform = transforms.Compose([
+# train_transform = transforms.Compose([
+#     transforms.Resize((256, 256)),
+#     transforms.RandomCrop(224),
+#     transforms.RandomHorizontalFlip(),
+#     transforms.RandomRotation(10),
+#     transforms.ColorJitter(brightness=0.2, contrast=0.2),
+#     transforms.RandomAffine(degrees=0, translate=(0.1, 0.1)),
+#     transforms.ToTensor(),
+#     transforms.Normalize(mean=[0.485, 0.456, 0.406],
+#                          std=[0.229, 0.224, 0.225]),
+# ])
+
+valid_transform = transforms.Compose([
     transforms.Resize((224, 224)),
     transforms.ToTensor(),
 ])
+# Validation transforms
+# valid_transform = transforms.Compose([
+#     transforms.Resize((224, 224)),
+#     transforms.ToTensor(),
+#     transforms.Normalize(mean=[0.485, 0.456, 0.406],
+#                          std=[0.229, 0.224, 0.225]),
+# ])
 
 # ==== Dataset & DataLoader ====
 train_dataset = AffectnetYoloDataset("data/AffectnetYolo/train", transform=train_transform)
-val_dataset   = AffectnetYoloDataset("data/AffectnetYolo/valid", transform=test_transform)
+val_dataset   = AffectnetYoloDataset("data/AffectnetYolo/valid", transform=valid_transform)
 
 train_loader = DataLoader(train_dataset, batch_size=BATCH_SIZE, shuffle=True)
 val_loader   = DataLoader(val_dataset, batch_size=BATCH_SIZE, shuffle=False)
@@ -58,6 +77,7 @@ model = model.to(DEVICE)
 
 # ==== Optimizer & Loss ==== Maybe having different optimizer and loss to test?
 criterion = nn.CrossEntropyLoss()
+
 optimizer = torch.optim.Adam(model.parameters(), lr=LEARNING_RATE)
 
 # ==== Scheduler (optional strategies) ====
@@ -98,7 +118,7 @@ for epoch in range(NUM_EPOCHS):
     model.eval()
     val_loss = 0.0
     val_preds, val_labels = [], []
-
+    bad_preds = []
 
     with torch.no_grad():
         for images, labels in val_loader:
@@ -107,11 +127,23 @@ for epoch in range(NUM_EPOCHS):
             loss = criterion(outputs, labels)
 
             val_loss += loss.item()
+            preds = outputs.argmax(dim=1)
             val_preds.extend(outputs.argmax(dim=1).cpu().numpy())
             val_labels.extend(labels.cpu().numpy())
 
+            # Collect wrong predictions
+            wrong = preds != labels
+            if wrong.any():
+                bad_images = images[wrong]
+                bad_labels = labels[wrong]
+                bad_preds_batch = preds[wrong]
+
+                for img, true_label, pred_label in zip(bad_images, bad_labels, bad_preds_batch):
+                    bad_preds.append((img.cpu(), true_label.cpu(), pred_label.cpu()))
+
     val_acc = accuracy_score(val_labels, val_preds)
     print(f"[Epoch {epoch+1}] Val Loss: {val_loss/len(val_loader):.4f} | Val Acc: {val_acc:.4f}")
+
 
     # === add tensorboard info after each epoch
     writer.add_scalar("Loss/train", train_loss / len(train_loader), epoch)
@@ -127,6 +159,10 @@ for epoch in range(NUM_EPOCHS):
 
 # === our own custom visuals to include below? maybe!
 plot_training_curves(train_losses, val_losses, train_accuracies, val_accuracies, MODEL_NAME)
+
+# ==== Visualize bad predictions ====
+if len(bad_preds) > 0:
+    show_bad_predictions(bad_preds, class_names=["Anger", "Contempt", "Disgust", "Fear", "Happy", "Neutral", "Sad", "Suprise"])
 
 # ==== Save Model ====
 torch.save(model.state_dict(), "vizemo.pth")
