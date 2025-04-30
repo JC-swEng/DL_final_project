@@ -1,0 +1,37 @@
+
+Model b0_4: 
+
+Final Train Accuracy:
+Final Train Loss:
+
+Final Val Acc:
+Final Val Loss:
+
+Test Accuracy: 0.6704
+F1 Score: 0.6704
+
+Confusion Matrix:
+[[222  12  50  25   1  31  18  24]
+ [  7 218  25   2  25  29   5  21]
+ [ 20  11 229  16  15   2  11  23]
+ [ 10   1  10 258   1   8   7  23]
+ [  0  33  24   0 321   4   3  14]
+ [ 13  24  17   9   1 144  14  28]
+ [ 18  11  27  25   3  30 146  18]
+ [ 10  13  26  81   7  20   2 309]]
+
+Classification Report:              
+                  precision    recall  f1-score   support
+
+           0       0.74      0.58      0.65       383
+           1       0.67      0.66      0.67       332
+           2       0.56      0.70      0.62       327
+           3       0.62      0.81      0.70       318
+           4       0.86      0.80      0.83       399
+           5       0.54      0.58      0.56       250
+           6       0.71      0.53      0.60       278
+           7       0.67      0.66      0.67       468
+
+    accuracy                           0.67      2755
+   macro avg       0.67      0.66      0.66      2755
+weighted avg       0.68      0.67      0.67      2755
