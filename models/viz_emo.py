@@ -5,7 +5,7 @@ import torch.nn as nn
 from torchvision import models
 from torchvision.models import EfficientNet_B0_Weights #, EfficientNet_B7_Weights, ViT_B_16_Weights
 
-def get_model(model_name: str, num_classes: int, device):
+def get_model(model_name: str, num_classes: int, device, dropout):
     
     weights = EfficientNet_B0_Weights.DEFAULT
     model = models.efficientnet_b0(weights=weights)
@@ -37,7 +37,7 @@ def get_model(model_name: str, num_classes: int, device):
                     param.requires_grad = True
                 else:
                     param.requires_grad = False
-        model.classifier[1] = nn.Linear(model.classifier[1].in_features, num_classes, dropout)
+        model.classifier[1] = nn.Linear(model.classifier[1].in_features, num_classes)
 
     elif model_name == "efficientnet_b0_4":
         """
