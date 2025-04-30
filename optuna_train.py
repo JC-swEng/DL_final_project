@@ -17,12 +17,16 @@ with open("outputs/optuna_results.txt", "a") as f:
 
 def objective(trial):
     # Hyperparameter tuning space
-    BATCH_SIZE = trial.suggest_categorical("BATCH_SIZE", [16, 32, 64, 128])
+    MODEL_NAME = trial.suggest_categorical("MODEL_NAME", ["efficientnet_b0_4", "efficientnet_b0_5"]) 
+    if MODEL_NAME == "efficientnet_b0_4":
+        BATCH_SIZE = 32
+    elif MODEL_NAME == "efficientnet_b0_5":
+        BATCH_SIZE = 64
     NUM_EPOCHS = 5
     NUM_CLASSES = 8
-    LEARNING_RATE = trial.suggest_loguniform("LEARNING_RATE", 1e-5, 1e-1)
-    MODEL_NAME = trial.suggest_categorical("MODEL_NAME", ["efficientnet_b0_2", "efficientnet_b0_3", "efficientnet_b0_4", "efficientnet_b0_5"]) 
-    
+    LEARNING_RATE = trial.suggest_loguniform("LEARNING_RATE", 1e-4, 5e-3)
+    DROPOUT_RATE = trial.suggest_uniform("DROPOUT_RATE", 0.0, 0.75)
+
     # DEVICE
     DEVICE = torch.device("cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu")
     
@@ -45,7 +49,7 @@ def objective(trial):
     val_loader = DataLoader(val_dataset, batch_size=BATCH_SIZE, shuffle=False)
 
     # ==== Model ====
-    model = get_model(MODEL_NAME, NUM_CLASSES, DEVICE)
+    model = get_model(MODEL_NAME, NUM_CLASSES, DEVICE, DROPOUT_RATE)
     model.to(DEVICE)
 
     # ==== Optimizer & Loss ====
@@ -96,7 +100,7 @@ def objective(trial):
 
     
     # Log trial results into txt file
-    trial_result = f"Trial {trial.number}:  MODEL_NAME={MODEL_NAME}, BATCH_SIZE={BATCH_SIZE}, LEARNING_RATE={LEARNING_RATE:.6f}\n  Val Acc={best_val_acc:.4f}\n"
+    trial_result = f"Trial {trial.number}:  MODEL_NAME={MODEL_NAME}, BATCH_SIZE={BATCH_SIZE}, LEARNING_RATE={LEARNING_RATE:.6f}, DROPOUT_RATE={DROPOUT_RATE:.3f}\n  Val Acc={best_val_acc:.4f}\n"
     os.makedirs("outputs", exist_ok=True)
 
     # Append results to a txt file
@@ -108,7 +112,7 @@ def objective(trial):
 
 # start the optuna trial process
 study = optuna.create_study(direction="minimize")  # minimize the negative validation accuracy
-study.optimize(objective, n_trials=30)  # number of optuna trials
+study.optimize(objective, n_trials=15)  # number of optuna trials
 
 # Print best hyperparameters
 print("Best hyperparameters:", study.best_params)

@@ -159,7 +159,7 @@ for epoch in range(NUM_EPOCHS):
     val_accuracies.append(val_acc)
 
 # === our own custom visuals to include below? maybe!
-plot_training_curves(train_losses, val_losses, train_accuracies, val_accuracies, MODEL_NAME)
+plot_training_curves(train_losses, val_losses, train_accuracies, val_accuracies, "Model b0_4, BS 32, LR 0.000148, DR 0.691")
 
 # ==== Visualize bad predictions ====
 if len(bad_preds) > 0:
