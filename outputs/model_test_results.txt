@@ -1,11 +1,16 @@
 
 Model b0_4: 
 
-Final Train Accuracy:
-Final Train Loss:
+BATCH_SIZE: 32
+NUM_EPOCHS: 10
+LEARNING_RATE: 0.000148
+NUM_CLASSES: 8
+MODEL_NAME: efficientnet_b0_4 
+DROPOUT_RATE: 0.691
 
-Final Val Acc:
-Final Val Loss:
+[Epoch 10] Train Loss: 0.1355 | Train Acc: 0.9528
+[Epoch 10] Val Loss: 1.2993 | Val Acc: 0.6918
+
 
 Test Accuracy: 0.6704
 F1 Score: 0.6704
