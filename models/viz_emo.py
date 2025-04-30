@@ -37,14 +37,14 @@ def get_model(model_name: str, num_classes: int, device):
                     param.requires_grad = True
                 else:
                     param.requires_grad = False
-        model.classifier[1] = nn.Linear(model.classifier[1].in_features, num_classes)
+        model.classifier[1] = nn.Linear(model.classifier[1].in_features, num_classes, dropout)
 
     elif model_name == "efficientnet_b0_4":
         """
         Add Dropout Before Final Layer
         """
         model.classifier = nn.Sequential(
-            nn.Dropout(p=0.4),
+            nn.Dropout(p=dropout),
             nn.Linear(model.classifier[1].in_features, num_classes)
         )
     
@@ -54,7 +54,7 @@ def get_model(model_name: str, num_classes: int, device):
         """
         model.classifier = nn.Sequential(
             nn.BatchNorm1d(model.classifier[1].in_features),
-            nn.Dropout(0.4), 
+            nn.Dropout(dropout), 
             nn.Linear(model.classifier[1].in_features, num_classes)
         )
     else:

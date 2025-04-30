@@ -30,6 +30,7 @@ NUM_EPOCHS = config["NUM_EPOCHS"]
 LEARNING_RATE = config["LEARNING_RATE"]
 NUM_CLASSES = config["NUM_CLASSES"]
 MODEL_NAME = config["MODEL_NAME"]
+DROPOUT_RATE = config["DROPOUT_RATE"]
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu")
 
 # ==== Transforms ==== Need to be modular with all possible transformation and augementation
@@ -72,7 +73,7 @@ val_loader   = DataLoader(val_dataset, batch_size=BATCH_SIZE, shuffle=False)
 
 # ==== Model ==== we can modified models/viz_emo.py to customized specific model
 
-model = get_model(MODEL_NAME, NUM_CLASSES, DEVICE)
+model = get_model(MODEL_NAME, NUM_CLASSES, DEVICE, DROPOUT_RATE)
 model = model.to(DEVICE)
 
 # ==== Optimizer & Loss ==== Maybe having different optimizer and loss to test?

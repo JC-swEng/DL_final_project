@@ -22,6 +22,7 @@ MODEL_PATH = "vizemo.pth"
 NUM_CLASSES = config["NUM_CLASSES"]
 BATCH_SIZE = config["BATCH_SIZE"]
 MODEL_NAME = config["MODEL_NAME"]
+DROPOUT_RATE = config["DROPOUT_RATE"]
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu")
 
 # ==== Transforms ====
@@ -41,7 +42,7 @@ test_dataset = AffectnetYoloDataset(TEST_DIR, transform=test_transform)
 test_loader = DataLoader(test_dataset, batch_size=BATCH_SIZE, shuffle=False)
 
 # ==== Load Model ==== 
-model = get_model(MODEL_NAME, NUM_CLASSES, DEVICE)
+model = get_model(MODEL_NAME, NUM_CLASSES, DEVICE, DROPOUT_RATE)
 model.load_state_dict(torch.load(MODEL_PATH, map_location=DEVICE))
 model = model.to(DEVICE)
 model.eval()
